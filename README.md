@@ -9,6 +9,5 @@
 ```pip3 install deepNets```
 
 <i>[For info visit Pypi page](https://pypi.org/project/deepNets/0.1.3/)</i>
-
 </br>
 <i>The current version does not support GPU</i>
