@@ -13,7 +13,7 @@ classifiers = [
  
 setup(
   name='deepNets',
-  version='0.1.3',
+  version='0.1.4',
   description='A basic deep learning tool',
   long_description=open('README.txt').read() + '\n\n' + open('CHANGELOG.txt').read(),
   url='',  
@@ -24,5 +24,5 @@ setup(
   keywords='deepLearning', 
   packages=find_packages(),
   setup_requires=['numpy'],
-  install_requires=['numpy'] 
+  install_requires=['numpy']
 )
