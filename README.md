@@ -1,7 +1,6 @@
 <h1>DeepNets</h1>
 <ul>
 <li>Deep learning library for constructing neutral networks.</li>
-<li>Simple Deep learning library and easy to use functions.</li>
 <li>Currently supports neural network modules(fully-connected
 layers,non-linearities) and classification(softmax) functions.</li>
 </ul>
