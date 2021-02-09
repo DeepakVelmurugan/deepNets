@@ -1,6 +1,6 @@
 Change Log
 ==========
 
-0.1.4 (8/01/2021)
+0.1.6 (9/02/2021)
 -------------------
-- Third Release with fully connected layer functionality
+- Fourth Release with convolutional and fully connected layer functionality
