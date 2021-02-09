@@ -24,7 +24,6 @@ def affine_forward(x, w, b):
     cache = (x, w, b)
     return out, cache
 
-
 def affine_backward(dout, cache):
     """
     Computes the backward pass for an affine layer.
@@ -53,7 +52,6 @@ def affine_backward(dout, cache):
     dw = np.dot(X.T,dS) #DxN X NxM -> DxM
     return dx, dw, db
 
-
 def relu_forward(x):
     """
     Computes the forward pass for a layer of rectified linear units (ReLUs).
@@ -70,7 +68,6 @@ def relu_forward(x):
     cache = x
     return out, cache
 
-
 def relu_backward(dout, cache):
     """
     Computes the backward pass for a layer of rectified linear units (ReLUs).
@@ -86,7 +83,6 @@ def relu_backward(dout, cache):
     dx = dout
     dx[x<0] = 0
     return dx
-
 
 """ Normalisation layers """
 
@@ -229,6 +225,207 @@ def layernorm_backward(dout, cache):
     dx,dgamma,dbeta = batchnorm_backward(dout.T,cache)
     dx = dx.T
     return dx, dgamma, dbeta
+
+def spatial_batchnorm_forward(x, gamma, beta, bn_param):
+
+
+    """
+    Computes the forward pass for spatial batch normalization.
+
+    Inputs:
+    - x: Input data of shape (N, C, H, W)
+    - gamma: Scale parameter, of shape (C,)
+    - beta: Shift parameter, of shape (C,)
+    - bn_param: Dictionary with the following keys:
+      - mode: 'train' or 'test'; required
+      - eps: Constant for numeric stability
+      - momentum: Constant for running mean / variance. momentum=0 means that
+        old information is discarded completely at every time step, while
+        momentum=1 means that new information is never incorporated. The
+        default of momentum=0.9 should work well in most situations.
+      - running_mean: Array of shape (D,) giving running mean of features
+      - running_var Array of shape (D,) giving running variance of features
+
+    Returns a tuple of:
+    - out: Output data, of shape (N, C, H, W)
+    - cache: Values needed for the backward pass
+    """
+    out,cache = None,None
+    N,C,H,W = x.shape
+    x = x.transpose(0,2,3,1).reshape(N*H*W,C) #Changing NxCxHxW -> NxHxWxC
+    out,cache = batchnorm_forward(x,gamma,beta,bn_param) #Normalising over each channel -> (N*H*W,C)
+    out = out.reshape(N,H,W,C).transpose(0,3,1,2) #Changing back NxHxWxC -> NxCxHxW
+    return out,cache
+  
+def spatial_batchnorm_backward(dout, cache):
+    """
+    Computes the backward pass for spatial batch normalization.
+
+    Inputs:
+    - dout: Upstream derivatives, of shape (N, C, H, W)
+    - cache: Values from the forward pass
+
+    Returns a tuple of:
+    - dx: Gradient with respect to inputs, of shape (N, C, H, W)
+    - dgamma: Gradient with respect to scale parameter, of shape (C,)
+    - dbeta: Gradient with respect to shift parameter, of shape (C,)
+    """
+    dx, dgamma, dbeta = None, None, None
+    N,C,H,W = dout.shape
+    dout = dout.transpose(0,2,3,1).reshape(N*H*W,C)
+    dx,dgamma,dbeta = batchnorm_backward(dout,cache)
+    dx = dx.reshape(N,H,W,C).transpose(0,3,1,2)
+
+    return dx, dgamma, dbeta
+
+"""Conv Layers"""
+
+def conv_forward(x,w,b,conv_param):
+  """
+    Forward pass for a convolutional layer.
+
+    The input consists of N data points, each with C channels, height H and
+    width W. We convolve each input with F different filters, where each filter
+    spans all C channels and has height HH and width WW.
+
+    Input:
+    - x: Input data of shape (N, C, H, W)
+    - w: Filter weights of shape (F, C, HH, WW)
+    - b: Biases, of shape (F,)
+    - conv_param: A dictionary with the following keys:
+      - 'stride': The number of pixels between adjacent receptive fields in the
+        horizontal and vertical directions.
+      - 'pad': The number of pixels that will be used to zero-pad the input. 
+        
+
+    During padding, 'pad' zeros should be placed symmetrically (i.e equally on both sides)
+    along the height and width axes of the input. Be careful not to modfiy the original
+    input x directly.
+
+    Returns a tuple of:
+    - out: Output data, of shape (N, F, H', W') where H' and W' are given by
+      H' = 1 + (H + 2 * pad - HH) / stride
+      W' = 1 + (W + 2 * pad - WW) / stride
+    - cache: (x with padding, w, b, conv_param)
+    """
+  stride,padding = conv_param.get("stride",1),conv_param.get("padding",0)
+  N,C,H,W = x.shape
+  F,C,HH,WW = w.shape
+  assert (H + 2*padding - HH)%stride == 0 , "Conv filter height not proper"
+  assert (W + 2*padding - WW)%stride == 0 , "Conv filter width not proper"
+  Hout = (H + 2*padding - HH) // (stride) + 1
+  Wout = (W + 2*padding - WW) // (stride) + 1
+  out = np.zeros((N,F,Hout,Wout))
+  xp = np.pad(x,((0,0),(0,0),(padding,padding),(padding,padding)),'constant')
+  for hout in range(Hout):
+    for wout in range(Wout):
+      xp_win = xp[:,:,hout*stride:hout*stride + HH,wout*stride:wout*stride+WW]
+      convolve = np.tensordot(xp_win,w,axes=[(1,2,3),(1,2,3)])  #sum(x*w dot product)
+      out[:,:,hout,wout] = convolve  + b[None,:]  # x*w + b 
+  cache = (xp,w,b,conv_param)
+  return out,cache
+
+def conv_backward(dout,cache):
+  """
+    Backward pass for a convolutional layer.
+
+    Inputs:
+    - dout: Upstream derivatives (N, F, H', W')
+    - cache: A tuple of (x with padding, w, b, conv_param) as in
+             conv_forward_naive
+
+    Returns a tuple of:
+    - dx: Gradient with respect to x (N, C, H, W)
+    - dw: Gradient with respect to w (F, C, HH, WW)
+    - db: Gradient with respect to b (F)
+  """
+  xp,w,b,conv_param = cache
+  stride,padding = conv_param["stride"],conv_param["padding"]
+  if(padding>0):
+    x = xp[:,:,+padding:-padding,+padding:-padding] #Removing padding
+  else:
+    x = xp
+  N,C,H,W = x.shape
+  F,C,HH,WW = w.shape
+  Hout = (H + 2*padding - HH) // (stride) + 1
+  Wout = (W + 2*padding - WW) // (stride) + 1
+  dxp = np.zeros_like(xp)
+  dw = np.zeros_like(w)
+  db = np.zeros_like(b)
+  for hout in range(Hout):
+    for wout in range(Wout):
+      dout_part = dout[:,:,hout,wout]
+      dconv = np.tensordot(dout_part,w,axes=[(1,),(0,)]) #1 because depth is different , 0 because no of filters not reqd
+      db += np.sum(dout_part,axis=(0,))
+      xp_part = xp[:,:,hout*stride:hout*stride + HH,wout*stride:wout*stride+WW] #convolved part
+      dw += np.tensordot(dout_part,xp_part,axes=[(0,),(0,)]) # 0 is no of inps so not reqd
+      dxp[:,:,hout*stride:hout*stride + HH,wout*stride:wout*stride+WW] += dconv
+  if(padding>0):
+    dx = dxp[0:N,0:C,+padding:-padding,+padding:-padding]
+  else:
+    dx = dxp[0:N,0:C,:,:]
+  return dx,dw,db
+    
+"""Pool layers"""
+
+def max_pool_forward(x, pool_param):
+  """
+    A naive implementation of the forward pass for a max-pooling layer.
+
+    Inputs:
+    - x: Input data, of shape (N, C, H, W)
+    - pool_param: dictionary with the following keys:
+      - 'pool_height': The height of each pooling region
+      - 'pool_width': The width of each pooling region
+      - 'stride': The distance between adjacent pooling regions
+
+    No padding is necessary here. Output size is given by 
+
+    Returns a tuple of:
+    - out: Output data, of shape (N, C, H', W') where H' and W' are given by
+      H' = 1 + (H - pool_height) / stride
+      W' = 1 + (W - pool_width) / stride
+    - cache: (x, pool_param)
+  """
+  HH,WW = pool_param.get("filter_size"),pool_param.get("filter_size")
+  stride = pool_param.get("stride",1)
+  N,C,H,W = x.shape
+  assert (H - HH)%stride == 0,"Pool filter height not proper"
+  assert (W - WW)%stride == 0,"Pool filter width not proper"
+  Hout = (H - HH) // stride + 1
+  Wout = (W - WW) // stride + 1
+  out = np.zeros((N,C,Hout,Wout))
+  for hout in range(Hout):
+    for wout in range(Wout):
+      out[:,:,hout,wout] = np.amax(x[:,:,hout*stride:hout*stride+HH,wout*stride:wout*stride+WW],axis=(2,3))
+  cache = (x,out,pool_param)
+  return out,cache
+
+def max_pool_backward(dout,cache):
+  """
+    A naive implementation of the backward pass for a max-pooling layer.
+
+    Inputs:
+    - dout: Upstream derivatives (N, C, H', W')
+    - cache: A tuple of (x, pool_param) as in the forward pass.
+
+    Returns:
+    - dx: Gradient with respect to x (N, C, H, W)
+  """
+  x,_,pool_param = cache
+  N,C,H,W = x.shape
+  HH,WW = pool_param.get("filter_size"),pool_param.get("filter_size")
+  stride = pool_param.get("stride",1)
+  Hout = (H - HH) // stride + 1
+  Wout = (W - WW) // stride + 1
+  dx = np.zeros_like(x)
+  for hout in range(Hout):
+    for wout in range(Wout):
+      xmax = np.amax(x[:,:,hout*stride:hout*stride+HH,wout*stride:wout*stride+WW],axis=(2,3))
+      xmask = (xmax[:,:,None,None] == x[:,:,hout*stride:hout*stride+HH,wout*stride:wout*stride+WW]) #None part adds new index (x,y) to (x,y,1)
+      dout_part = dout[:,:,hout,wout]
+      dx[:,:,hout*stride:hout*stride+HH,wout*stride:wout*stride+WW] += xmask * dout_part[:,:,None,None]
+  return dx
 
 """Loss layers"""
 
