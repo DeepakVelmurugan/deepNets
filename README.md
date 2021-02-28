@@ -8,7 +8,7 @@ layers,non-linearities) and classification(softmax) functions.</li>
 <li>Ability to specify and train Convolutional Networks that process images.</li>
 </ul>
 
-<p>Latest version : 0.1.6</p>
+<p>Latest version : 0.1.7</p>
 
 <b>Install using pip :</b></br>
 ```pip3 install deepNets```
