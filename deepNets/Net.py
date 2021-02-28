@@ -104,7 +104,7 @@ class Net(object):
         for i in range(self.layers_length):   
             if type(self.layerDims[i]) is list:
                 if channel == 0:
-                    channel = 3 # 3 channel image 
+                    channel = input_layer.get("inp").shape[1] # 3 channel image is preferred
                 self.params["W"+str(i+1)] = weight_scale * np.random.randn(self.layerDims[i][0],channel,self.layerDims[i][1],self.layerDims[i][1])
                 self.params["b"+str(i+1)] = np.zeros(self.layerDims[i][0])
                 self.params["gamma"+str(i+1)] = np.ones(self.layerDims[i][0])
