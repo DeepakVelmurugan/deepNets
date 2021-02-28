@@ -65,6 +65,7 @@ layers,non-linearities) and classification(softmax) functions.</li>
     #Train your network
     trainer.train()
 ```
+<i>For example and tutorial : [predicting numbers using deepNets in MNIST dataset](https://github.com/DeepakVelmurugan/deepNets/blob/main/MNISTdeepNets.ipynb)</i>
 <pre>Currently only batch norm is supported for Conv nets.</pre></br>
 <i>[For info visit Pypi page](https://pypi.org/project/deepNets/0.1.6/)</i>
 </br>
