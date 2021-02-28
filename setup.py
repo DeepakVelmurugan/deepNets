@@ -13,7 +13,7 @@ classifiers = [
  
 setup(
   name='deepNets',
-  version='0.1.6',
+  version='0.1.7',
   description='A basic deep learning tool',
   long_description=open('README.txt').read() + '\n\n' + open('CHANGELOG.txt').read(),
   url='',  
