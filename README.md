@@ -69,4 +69,6 @@ layers,non-linearities) and classification(softmax) functions.</li>
 <pre>Currently only batch norm is supported for Conv nets.</pre> 
 <i>[For info visit Pypi page](https://pypi.org/project/deepNets/0.1.8/)</i>
 </br>
+<strong>Check out the official documentation of deepNets to learn more about it [deepNets-website](https://deep-nets.herokuapp.com)</strong>
+</br>
 <i>The current version does not support GPU :shit:</i>
