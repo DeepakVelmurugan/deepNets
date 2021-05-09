@@ -8,7 +8,7 @@ layers,non-linearities) and classification(softmax) functions.</li>
 <li>Ability to specify and train Convolutional Networks that process images.</li>
 </ul>
 
-<p>Latest version : 0.1.7 :white_check_mark:</p>
+<p>Latest version : 0.1.8 :white_check_mark:</p>
 
 <b>Install using pip :</b></br>
 ```pip3 install deepNets```
@@ -67,6 +67,6 @@ layers,non-linearities) and classification(softmax) functions.</li>
 ```
 <i>For example and tutorial : [predicting numbers using deepNets in MNIST dataset](https://github.com/DeepakVelmurugan/deepNets/blob/main/MNISTdeepNets.ipynb)</i>
 <pre>Currently only batch norm is supported for Conv nets.</pre> 
-<i>[For info visit Pypi page](https://pypi.org/project/deepNets/0.1.7/)</i>
+<i>[For info visit Pypi page](https://pypi.org/project/deepNets/0.1.8/)</i>
 </br>
 <i>The current version does not support GPU :shit:</i>
